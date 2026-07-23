@@ -225,51 +225,41 @@ function App() {
         </div>
       )}
 
-      {/* VISTA CALENDARIO CON NUEVOS COLORES LLAMATIVOS */}
+      {/* VISTA CALENDARIO CON TARJETAS VERTICALES GRANDES */}
       {vistaActual === 'calendario' && (
         <div style={{ background: '#1a1a1a', padding: '18px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-            <button onClick={() => setFecha(new Date(year, month - 1, 1))} style={{ fontSize: '15px', background: '#252525', border: 'none', color: 'white', borderRadius: '8px', padding: '9px 15px', cursor: 'pointer' }}>&lt; Mes</button>
-            <h2 style={{ margin: 0, textTransform: 'capitalize', fontSize: '18px', color: '#ffffff', fontWeight: 'bold' }}>{fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</h2>
-            <button onClick={() => setFecha(new Date(year, month + 1, 1))} style={{ fontSize: '15px', background: '#252525', border: 'none', color: 'white', borderRadius: '8px', padding: '9px 15px', cursor: 'pointer' }}>Mes &gt;</button>
+            <button onClick={() => setFecha(new Date(year, month - 1, 1))} style={{ fontSize: '15px', background: '#252525', border: 'none', color: '#4CAF50', borderRadius: '8px', padding: '9px 15px', cursor: 'pointer', fontWeight: 'bold' }}>&lt; Mes</button>
+            <h2 style={{ margin: 0, textTransform: 'capitalize', fontSize: '18px', color: '#4CAF50', fontWeight: 'bold' }}>{fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</h2>
+            <button onClick={() => setFecha(new Date(year, month + 1, 1))} style={{ fontSize: '15px', background: '#252525', border: 'none', color: '#4CAF50', borderRadius: '8px', padding: '9px 15px', cursor: 'pointer', fontWeight: 'bold' }}>Mes &gt;</button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
-            {['Lu','Ma','Mi','Ju','Vi','Sa','Do'].map(d => <div key={d} style={{ textAlign: 'center', color: '#ffffff', fontSize: '13px', fontWeight: 'bold', paddingBottom: '8px' }}>{d}</div>)}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+            {['Lu','Ma','Mi','Ju','Vi','Sa','Do'].map(d => <div key={d} style={{ textAlign: 'center', color: '#4CAF50', fontSize: '13px', fontWeight: 'bold', paddingBottom: '8px' }}>{d}</div>)}
             {[...Array((new Date(year, month, 1).getDay() + 6) % 7)].map((_, i) => <div key={`empty-${i}`}></div>)}
             {[...Array(new Date(year, month + 1, 0).getDate())].map((_, i) => {
               const diaReal = i + 1;
-              const k = `${year}-${(month + 1).toString().padStart(2, '0')}-${diaReal.toString().padStart(2, '0')}`;
-              const dInfo = datosDiarios[k];
-              const ingDia = (dInfo?.ingresos || []).reduce((acc, x) => acc + x.monto, 0);
-              const gasDia = (dInfo?.gastos || []).reduce((acc, x) => acc + x.monto, 0);
               const esHoy = new Date().toDateString() === new Date(year, month, diaReal).toDateString();
-              const tieneMovimientos = ingDia > 0 || gasDia > 0;
 
               return (
                 <button 
                   key={diaReal} 
                   onClick={() => { setFecha(new Date(year, month, diaReal)); setVistaActual('diario'); }} 
                   style={{ 
-                    padding: '8px 2px', 
-                    background: esHoy ? '#163821' : (tieneMovimientos ? '#1c2821' : '#181818'), 
-                    border: esHoy ? '2px solid #4CAF50' : (tieneMovimientos ? '1px solid #2e7d32' : '1px solid #2a2a2a'), 
-                    color: 'white', 
+                    padding: '24px 2px', 
+                    backgroundColor: esHoy ? '#10341c' : '#141c16', 
+                    border: esHoy ? '2px solid #4CAF50' : '1px solid #1e3d25', 
                     borderRadius: '10px', 
+                    color: 'white', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
                     cursor: 'pointer',
-                    minHeight: '84px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    boxShadow: esHoy ? '0 0 10px rgba(76, 175, 80, 0.5)' : 'none'
+                    minHeight: '75px',
+                    boxShadow: esHoy ? '0 0 12px rgba(76, 175, 80, 0.6)' : 'none'
                   }}>
-                  {/* Número grande y destacado */}
-                  <strong style={{ fontSize: '20px', color: esHoy ? '#76ff03' : '#ffffff', fontWeight: '900', marginTop: '2px' }}>{diaReal}</strong>
-                  <div style={{ width: '100%', fontSize: '11px', lineHeight: '1.2', marginBottom: '2px' }}>
-                    {ingDia > 0 && <div style={{ color: '#4CAF50', fontWeight: 'bold' }}>+{ingDia.toFixed(0)}€</div>}
-                    {gasDia > 0 && <div style={{ color: '#ff5252', fontWeight: 'bold' }}>-{gasDia.toFixed(0)}€</div>}
-                  </div>
+                  <span style={{ fontWeight: '900', fontSize: esHoy ? '20px' : '17px', color: esHoy ? '#76ff03' : '#ffffff' }}>{diaReal}</span>
                 </button>
               );
             })}
