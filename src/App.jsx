@@ -141,8 +141,8 @@ function App() {
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', background: '#1a1a1a', padding: '14px 20px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
             <button onClick={() => setFecha(new Date(year, month, fecha.getDate()-1))} style={{fontSize: '22px', background:'none', border:'none', color:'white', cursor: 'pointer', padding: '0 5px'}}>&lt;</button>
-            <span style={{ fontWeight: 'bold', fontSize: '18px', color: '#fff' }}>
-              {fecha.getDate()}/{fecha.getMonth() + 1}/{fecha.getFullYear()}
+            <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#fff', textTransform: 'capitalize' }}>
+              {fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' })}
             </span>
             <button onClick={() => setFecha(new Date(year, month, fecha.getDate()+1))} style={{fontSize: '22px', background:'none', border:'none', color:'white', cursor: 'pointer', padding: '0 5px'}}>&gt;</button>
           </div>
@@ -182,7 +182,7 @@ function App() {
         </div>
       )}
 
-      {/* VISTA RESUMEN MENSUAL AMPLIADA Y CLARA */}
+      {/* VISTA RESUMEN MENSUAL */}
       {vistaActual === 'mensual' && (
         <div style={{ background: '#1a1a1a', padding: '22px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '20px', textTransform: 'capitalize', fontSize: '19px', color: '#fff' }}>Resumen de {fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</h2>
@@ -207,7 +207,7 @@ function App() {
         </div>
       )}
 
-      {/* VISTA RESUMEN ANUAL AMPLIADA Y LEGIBLE */}
+      {/* VISTA RESUMEN ANUAL */}
       {vistaActual === 'anual' && (
         <div style={{ background: '#1a1a1a', padding: '18px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '18px', fontSize: '19px', color: '#fff' }}>Resumen Anual ({year})</h2>
@@ -225,7 +225,7 @@ function App() {
         </div>
       )}
 
-      {/* VISTA CALENDARIO CON NÚMEROS MÁS GRANDES Y CÓMODOS */}
+      {/* VISTA CALENDARIO CON NÚMEROS MUY GRANDES */}
       {vistaActual === 'calendario' && (
         <div style={{ background: '#1a1a1a', padding: '18px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
@@ -250,21 +250,22 @@ function App() {
                   key={diaReal} 
                   onClick={() => { setFecha(new Date(year, month, diaReal)); setVistaActual('diario'); }} 
                   style={{ 
-                    padding: '10px 2px', 
-                    background: esHoy ? '#1b3b1c' : '#111812', 
-                    border: esHoy ? '2px solid #4CAF50' : '1px solid #1e4620', 
+                    padding: '8px 2px', 
+                    background: esHoy ? '#1b3b1c' : '#141d14', 
+                    border: esHoy ? '2px solid #4CAF50' : '1px solid #224422', 
                     color: 'white', 
                     borderRadius: '10px', 
                     cursor: 'pointer',
-                    minHeight: '76px',
+                    minHeight: '84px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    boxShadow: esHoy ? '0 0 8px rgba(76, 175, 80, 0.4)' : 'none'
                   }}>
-                  {/* Número del día más grande y visible */}
-                  <strong style={{ fontSize: '16px', color: '#fff' }}>{diaReal}</strong>
-                  <div style={{ width: '100%', fontSize: '11px', lineHeight: '1.3' }}>
+                  {/* Número del día más grande y destacado */}
+                  <strong style={{ fontSize: '20px', color: '#ffffff', fontWeight: '900', marginTop: '2px' }}>{diaReal}</strong>
+                  <div style={{ width: '100%', fontSize: '11px', lineHeight: '1.2', marginBottom: '2px' }}>
                     {ingDia > 0 && <div style={{ color: '#4CAF50', fontWeight: 'bold' }}>+{ingDia.toFixed(0)}€</div>}
                     {gasDia > 0 && <div style={{ color: '#ff4d4d', fontWeight: 'bold' }}>-{gasDia.toFixed(0)}€</div>}
                   </div>
