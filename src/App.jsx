@@ -225,13 +225,13 @@ function App() {
         </div>
       )}
 
-      {/* VISTA CALENDARIO CON TARJETAS VERTICALES GRANDES */}
+      {/* VISTA CALENDARIO CON TARJETAS VERTICALES Y TÍTULO EN BLANCO */}
       {vistaActual === 'calendario' && (
         <div style={{ background: '#1a1a1a', padding: '18px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-            <button onClick={() => setFecha(new Date(year, month - 1, 1))} style={{ fontSize: '15px', background: '#252525', border: 'none', color: '#4CAF50', borderRadius: '8px', padding: '9px 15px', cursor: 'pointer', fontWeight: 'bold' }}>&lt; Mes</button>
-            <h2 style={{ margin: 0, textTransform: 'capitalize', fontSize: '18px', color: '#4CAF50', fontWeight: 'bold' }}>{fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</h2>
-            <button onClick={() => setFecha(new Date(year, month + 1, 1))} style={{ fontSize: '15px', background: '#252525', border: 'none', color: '#4CAF50', borderRadius: '8px', padding: '9px 15px', cursor: 'pointer', fontWeight: 'bold' }}>Mes &gt;</button>
+            <button onClick={() => setFecha(new Date(year, month - 1, 1))} style={{ fontSize: '14px', background: '#222', border: '1px solid #333', color: '#fff', borderRadius: '8px', padding: '9px 14px', cursor: 'pointer', fontWeight: 'bold' }}>&lt; Mes</button>
+            <h2 style={{ margin: 0, textTransform: 'capitalize', fontSize: '17px', color: '#ffffff', fontWeight: 'bold', letterSpacing: '0.5px' }}>{fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</h2>
+            <button onClick={() => setFecha(new Date(year, month + 1, 1))} style={{ fontSize: '14px', background: '#222', border: '1px solid #333', color: '#fff', borderRadius: '8px', padding: '9px 14px', cursor: 'pointer', fontWeight: 'bold' }}>Mes &gt;</button>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
