@@ -4,7 +4,6 @@ function App() {
   const [vistaActual, setVistaActual] = useState('diario');
   const [fecha, setFecha] = useState(new Date());
 
-  // Ajustes iniciales (Gastos fijos mensuales y porcentaje de IVA por defecto)
   const [config, setConfig] = useState(() => {
     const guardado = localStorage.getItem('portacontrol_ajustes');
     return guardado ? JSON.parse(guardado) : {
@@ -121,27 +120,26 @@ function App() {
   return (
     <div style={{ padding: '15px', backgroundColor: '#121212', color: 'white', minHeight: '100vh', fontFamily: 'sans-serif', maxWidth: '480px', margin: '0 auto' }}>
       
-      {/* Cabecera con el logo (logo.png) */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px', background: '#1a1a1a', padding: '12px 15px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
-        <img src="/logo.png" alt="Logo" style={{ width: '45px', height: '45px', borderRadius: '10px', objectFit: 'cover' }} />
+      {/* Cabecera con el logo */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px', background: '#1a1a1a', padding: '14px 18px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
+        <img src="/logo.png" alt="Logo" style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover' }} />
         <div>
-          <h1 style={{ fontSize: '16px', margin: 0, color: '#4CAF50', fontWeight: 'bold' }}>Portacontrol</h1>
-          <p style={{ fontSize: '11px', margin: 0, color: '#aaa' }}>Gestión de Autónomo</p>
+          <h1 style={{ fontSize: '17px', margin: 0, color: '#4CAF50', fontWeight: 'bold' }}>Portacontrol</h1>
+          <p style={{ fontSize: '12px', margin: 0, color: '#aaa' }}>Gestión de Autónomo</p>
         </div>
       </div>
 
       {/* Menú de pestañas */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '15px' }}>
+      <div style={{ display: 'flex', gap: '4px', marginBottom: '18px' }}>
         {['diario', 'mensual', 'anual', 'calendario', 'ajustes'].map(v => (
-          <button key={v} onClick={() => setVistaActual(v)} style={{ flex: 1, padding: '10px 2px', borderRadius: '8px', border: 'none', background: vistaActual === v ? '#4CAF50' : '#1e1e1e', color: vistaActual === v ? '#000' : 'white', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '9px', cursor: 'pointer' }}>{v}</button>
+          <button key={v} onClick={() => setVistaActual(v)} style={{ flex: 1, padding: '11px 2px', borderRadius: '8px', border: 'none', background: vistaActual === v ? '#4CAF50' : '#1e1e1e', color: vistaActual === v ? '#000' : 'white', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '10px', cursor: 'pointer' }}>{v}</button>
         ))}
       </div>
 
       {/* VISTA DIARIO */}
       {vistaActual === 'diario' && (
         <div>
-          {/* Selector de fecha limpio tipo 23/7/2026 */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', background: '#1a1a1a', padding: '12px 20px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', background: '#1a1a1a', padding: '14px 20px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
             <button onClick={() => setFecha(new Date(year, month, fecha.getDate()-1))} style={{fontSize: '22px', background:'none', border:'none', color:'white', cursor: 'pointer', padding: '0 5px'}}>&lt;</button>
             <span style={{ fontWeight: 'bold', fontSize: '18px', color: '#fff' }}>
               {fecha.getDate()}/{fecha.getMonth() + 1}/{fecha.getFullYear()}
@@ -149,98 +147,95 @@ function App() {
             <button onClick={() => setFecha(new Date(year, month, fecha.getDate()+1))} style={{fontSize: '22px', background:'none', border:'none', color:'white', cursor: 'pointer', padding: '0 5px'}}>&gt;</button>
           </div>
 
-          {/* Selector rápido de IVA */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#1a1a1a', padding: '10px 15px', borderRadius: '8px', marginBottom: '15px', border: '1px solid #2a2a2a', fontSize: '13px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#1a1a1a', padding: '12px 16px', borderRadius: '10px', marginBottom: '15px', border: '1px solid #2a2a2a', fontSize: '14px' }}>
             <span>Aplicar IVA ({config.porcentajeIva}%):</span>
-            <input type="checkbox" checked={llevaIva} onChange={(e) => setLlevaIva(e.target.checked)} style={{ width: '20px', height: '20px', accentColor: '#4CAF50', cursor: 'pointer' }} />
+            <input type="checkbox" checked={llevaIva} onChange={(e) => setLlevaIva(e.target.checked)} style={{ width: '22px', height: '22px', accentColor: '#4CAF50', cursor: 'pointer' }} />
           </div>
 
-          {/* Sección Ingresos */}
-          <div style={{ background: '#1a1a1a', padding: '15px', borderRadius: '12px', marginBottom: '15px', border: '1px solid #2e7d32' }}>
-            <h3 style={{ margin: '0 0 10px 0', color: '#4CAF50', fontSize: '15px' }}>Ingresos del Día</h3>
+          <div style={{ background: '#1a1a1a', padding: '16px', borderRadius: '12px', marginBottom: '15px', border: '1px solid #2e7d32' }}>
+            <h3 style={{ margin: '0 0 12px 0', color: '#4CAF50', fontSize: '16px' }}>Ingresos del Día</h3>
             <input type="text" placeholder="Concepto (ej: Portes Madrid)" value={conceptoIngreso} onChange={(e) => setConceptoIngreso(e.target.value)} style={inputStyle} />
             <input type="number" inputMode="decimal" placeholder="Importe (€)" value={ingresoInput} onChange={(e) => setIngresoInput(e.target.value)} style={inputStyle} />
-            <button onClick={agregarIngreso} style={{ width: '100%', padding: '12px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>Añadir Ingreso</button>
+            <button onClick={agregarIngreso} style={{ width: '100%', padding: '13px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>Añadir Ingreso</button>
             
             {datosDia.ingresos?.map(i => (
-              <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', background: '#111', padding: '10px', borderRadius: '6px' }}>
-                <span style={{ fontSize: '13px' }}>{i.concepto}: <strong>{i.monto.toFixed(2)}€</strong> {i.iva > 0 && <span style={{color: '#aaa', fontSize: '11px'}}>(IVA: {i.iva.toFixed(2)}€)</span>}</span>
-                <button onClick={() => eliminarIngreso(i.id)} style={{ background: '#ff4d4d', border: 'none', color: 'white', borderRadius: '4px', padding: '4px 10px', cursor: 'pointer', fontWeight: 'bold' }}>X</button>
+              <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', background: '#111', padding: '11px', borderRadius: '6px' }}>
+                <span style={{ fontSize: '14px' }}>{i.concepto}: <strong>{i.monto.toFixed(2)}€</strong> {i.iva > 0 && <span style={{color: '#aaa', fontSize: '12px'}}>(IVA: {i.iva.toFixed(2)}€)</span>}</span>
+                <button onClick={() => eliminarIngreso(i.id)} style={{ background: '#ff4d4d', border: 'none', color: 'white', borderRadius: '4px', padding: '5px 10px', cursor: 'pointer', fontWeight: 'bold' }}>X</button>
               </div>
             ))}
           </div>
 
-          {/* Sección Gastos Variables */}
-          <div style={{ background: '#1a1a1a', padding: '15px', borderRadius: '12px', border: '1px solid #c62828' }}>
-            <h3 style={{ margin: '0 0 10px 0', color: '#ff4d4d', fontSize: '15px' }}>Gastos Variables (Gasoil, Peajes...)</h3>
+          <div style={{ background: '#1a1a1a', padding: '16px', borderRadius: '12px', border: '1px solid #c62828' }}>
+            <h3 style={{ margin: '0 0 12px 0', color: '#ff4d4d', fontSize: '16px' }}>Gastos Variables (Gasoil, Peajes...)</h3>
             <input type="text" placeholder="Concepto (ej: Gasoil Repsol)" value={conceptoGasto} onChange={(e) => setConceptoGasto(e.target.value)} style={inputStyle} />
             <input type="number" inputMode="decimal" placeholder="Importe (€)" value={gastoInput} onChange={(e) => setGastoInput(e.target.value)} style={inputStyle} />
-            <button onClick={agregarGasto} style={{ width: '100%', padding: '12px', background: '#ff4d4d', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>Añadir Gasto</button>
+            <button onClick={agregarGasto} style={{ width: '100%', padding: '13px', background: '#ff4d4d', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>Añadir Gasto</button>
             
             {datosDia.gastos?.map(g => (
-              <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', background: '#111', padding: '10px', borderRadius: '6px' }}>
-                <span style={{ fontSize: '13px' }}>{g.concepto}: <strong>{g.monto.toFixed(2)}€</strong> {g.iva > 0 && <span style={{color: '#aaa', fontSize: '11px'}}>(IVA: {g.iva.toFixed(2)}€)</span>}</span>
-                <button onClick={() => eliminarGasto(g.id)} style={{ background: '#ff4d4d', border: 'none', color: 'white', borderRadius: '4px', padding: '4px 10px', cursor: 'pointer', fontWeight: 'bold' }}>X</button>
+              <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', background: '#111', padding: '11px', borderRadius: '6px' }}>
+                <span style={{ fontSize: '14px' }}>{g.concepto}: <strong>{g.monto.toFixed(2)}€</strong> {g.iva > 0 && <span style={{color: '#aaa', fontSize: '12px'}}>(IVA: {g.iva.toFixed(2)}€)</span>}</span>
+                <button onClick={() => eliminarGasto(g.id)} style={{ background: '#ff4d4d', border: 'none', color: 'white', borderRadius: '4px', padding: '5px 10px', cursor: 'pointer', fontWeight: 'bold' }}>X</button>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* VISTA RESUMEN MENSUAL */}
+      {/* VISTA RESUMEN MENSUAL AMPLIADA Y CLARA */}
       {vistaActual === 'mensual' && (
-        <div style={{ background: '#1a1a1a', padding: '20px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '15px', textTransform: 'capitalize', fontSize: '17px', color: '#fff' }}>Resumen de {fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</h2>
+        <div style={{ background: '#1a1a1a', padding: '22px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
+          <h2 style={{ textAlign: 'center', marginBottom: '20px', textTransform: 'capitalize', fontSize: '19px', color: '#fff' }}>Resumen de {fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</h2>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}><span>Total Facturado (Base):</span><strong style={{color: '#4CAF50'}}>{mesActualTotales.tIngresos.toFixed(2)}€</strong></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '13px', color: '#aaa' }}><span>IVA Repercutido (Cobrado):</span><span>+{mesActualTotales.tIvaRepercutido.toFixed(2)}€</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '15px' }}><span>Total Facturado (Base):</span><strong style={{color: '#4CAF50'}}>{mesActualTotales.tIngresos.toFixed(2)}€</strong></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '14px', color: '#aaa' }}><span>IVA Repercutido (Cobrado):</span><span>+{mesActualTotales.tIvaRepercutido.toFixed(2)}€</span></div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}><span>Gastos Variables:</span><span style={{color: '#ff4d4d'}}>{mesActualTotales.tGastosVariables.toFixed(2)}€</span></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '14px' }}><span>Gastos Fijos:</span><span style={{color: '#ff4d4d'}}>{mesActualTotales.totalGastosFijos.toFixed(2)}€</span></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '13px', color: '#aaa' }}><span>IVA Soportado (Pagado):</span><span>-{mesActualTotales.tIvaSoportado.toFixed(2)}€</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '15px' }}><span>Gastos Variables:</span><span style={{color: '#ff4d4d'}}>{mesActualTotales.tGastosVariables.toFixed(2)}€</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '15px' }}><span>Gastos Fijos:</span><span style={{color: '#ff4d4d'}}>{mesActualTotales.totalGastosFijos.toFixed(2)}€</span></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '18px', fontSize: '14px', color: '#aaa' }}><span>IVA Soportado (Pagado):</span><span>-{mesActualTotales.tIvaSoportado.toFixed(2)}€</span></div>
 
-          <hr style={{ borderColor: '#333', margin: '15px 0' }}/>
+          <hr style={{ borderColor: '#333', margin: '18px 0' }}/>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '15px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '16px' }}>
             <span>Balance IVA (A ingresar):</span>
             <strong style={{color: '#2196F3'}}>{mesActualTotales.balanceIva.toFixed(2)}€</strong>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '17px', fontWeight: 'bold', background: '#111', padding: '14px', borderRadius: '8px', border: '1px solid #333' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 'bold', background: '#111', padding: '16px', borderRadius: '10px', border: '1px solid #333' }}>
             <span>Beneficio Neto:</span><span style={{ color: mesActualTotales.beneficioNeto >= 0 ? '#4CAF50' : '#ff4d4d' }}>{mesActualTotales.beneficioNeto.toFixed(2)}€</span>
           </div>
         </div>
       )}
 
-      {/* VISTA RESUMEN ANUAL */}
+      {/* VISTA RESUMEN ANUAL AMPLIADA Y LEGIBLE */}
       {vistaActual === 'anual' && (
-        <div style={{ background: '#1a1a1a', padding: '15px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '15px', fontSize: '18px', color: '#fff' }}>Resumen Anual ({year})</h2>
+        <div style={{ background: '#1a1a1a', padding: '18px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
+          <h2 style={{ textAlign: 'center', marginBottom: '18px', fontSize: '19px', color: '#fff' }}>Resumen Anual ({year})</h2>
           {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].map((nombreMes, index) => {
             const t = calcularTotalesMes(index, year);
             return (
-              <div key={nombreMes} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 4px', borderBottom: '1px solid #2a2a2a', fontSize: '13px' }}>
-                <span style={{ width: '75px', fontWeight: 'bold', color: '#ddd' }}>{nombreMes}:</span>
+              <div key={nombreMes} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 6px', borderBottom: '1px solid #2a2a2a', fontSize: '14px' }}>
+                <span style={{ width: '90px', fontWeight: 'bold', color: '#ddd' }}>{nombreMes}:</span>
                 <span style={{ color: '#4CAF50' }}>Ing: {t.tIngresos.toFixed(0)}€</span>
                 <span style={{ color: '#ff4d4d' }}>Gas: {t.tGastosTotales.toFixed(0)}€</span>
-                <span style={{ fontWeight: 'bold', color: t.beneficioNeto >= 0 ? '#4CAF50' : '#ff4d4d' }}>{t.beneficioNeto.toFixed(0)}€</span>
+                <span style={{ fontWeight: 'bold', color: t.beneficioNeto >= 0 ? '#4CAF50' : '#ff4d4d', minWidth: '65px', textAlign: 'right' }}>{t.beneficioNeto.toFixed(0)}€</span>
               </div>
             );
           })}
         </div>
       )}
 
-      {/* VISTA CALENDARIO CON TARJETAS GRANDES Y LETRAS BLANCAS */}
+      {/* VISTA CALENDARIO CON NÚMEROS MÁS GRANDES Y CÓMODOS */}
       {vistaActual === 'calendario' && (
-        <div style={{ background: '#1a1a1a', padding: '15px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-            <button onClick={() => setFecha(new Date(year, month - 1, 1))} style={{ fontSize: '16px', background: '#252525', border: 'none', color: 'white', borderRadius: '8px', padding: '8px 14px', cursor: 'pointer' }}>&lt; Mes</button>
-            <h2 style={{ margin: 0, textTransform: 'capitalize', fontSize: '17px', color: '#ffffff', fontWeight: 'bold' }}>{fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</h2>
-            <button onClick={() => setFecha(new Date(year, month + 1, 1))} style={{ fontSize: '16px', background: '#252525', border: 'none', color: 'white', borderRadius: '8px', padding: '8px 14px', cursor: 'pointer' }}>Mes &gt;</button>
+        <div style={{ background: '#1a1a1a', padding: '18px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+            <button onClick={() => setFecha(new Date(year, month - 1, 1))} style={{ fontSize: '15px', background: '#252525', border: 'none', color: 'white', borderRadius: '8px', padding: '9px 15px', cursor: 'pointer' }}>&lt; Mes</button>
+            <h2 style={{ margin: 0, textTransform: 'capitalize', fontSize: '18px', color: '#ffffff', fontWeight: 'bold' }}>{fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</h2>
+            <button onClick={() => setFecha(new Date(year, month + 1, 1))} style={{ fontSize: '15px', background: '#252525', border: 'none', color: 'white', borderRadius: '8px', padding: '9px 15px', cursor: 'pointer' }}>Mes &gt;</button>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
-            {['Lu','Ma','Mi','Ju','Vi','Sa','Do'].map(d => <div key={d} style={{ textAlign: 'center', color: '#ffffff', fontSize: '12px', fontWeight: 'bold', paddingBottom: '6px' }}>{d}</div>)}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
+            {['Lu','Ma','Mi','Ju','Vi','Sa','Do'].map(d => <div key={d} style={{ textAlign: 'center', color: '#ffffff', fontSize: '13px', fontWeight: 'bold', paddingBottom: '8px' }}>{d}</div>)}
             {[...Array((new Date(year, month, 1).getDay() + 6) % 7)].map((_, i) => <div key={`empty-${i}`}></div>)}
             {[...Array(new Date(year, month + 1, 0).getDate())].map((_, i) => {
               const diaReal = i + 1;
@@ -255,21 +250,21 @@ function App() {
                   key={diaReal} 
                   onClick={() => { setFecha(new Date(year, month, diaReal)); setVistaActual('diario'); }} 
                   style={{ 
-                    padding: '8px 2px', 
+                    padding: '10px 2px', 
                     background: esHoy ? '#1b3b1c' : '#111812', 
                     border: esHoy ? '2px solid #4CAF50' : '1px solid #1e4620', 
                     color: 'white', 
-                    borderRadius: '8px', 
-                    fontSize: '13px', 
+                    borderRadius: '10px', 
                     cursor: 'pointer',
-                    minHeight: '68px',
+                    minHeight: '76px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     alignItems: 'center'
                   }}>
-                  <strong style={{ fontSize: '14px', color: '#fff' }}>{diaReal}</strong>
-                  <div style={{ width: '100%', fontSize: '10px', lineHeight: '1.2' }}>
+                  {/* Número del día más grande y visible */}
+                  <strong style={{ fontSize: '16px', color: '#fff' }}>{diaReal}</strong>
+                  <div style={{ width: '100%', fontSize: '11px', lineHeight: '1.3' }}>
                     {ingDia > 0 && <div style={{ color: '#4CAF50', fontWeight: 'bold' }}>+{ingDia.toFixed(0)}€</div>}
                     {gasDia > 0 && <div style={{ color: '#ff4d4d', fontWeight: 'bold' }}>-{gasDia.toFixed(0)}€</div>}
                   </div>
@@ -283,19 +278,19 @@ function App() {
       {/* VISTA AJUSTES */}
       {vistaActual === 'ajustes' && (
         <div style={{ background: '#1a1a1a', padding: '20px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '8px', fontSize: '18px', color: '#fff' }}>Configuración General</h2>
-          <p style={{ fontSize: '12px', color: '#aaa', marginBottom: '20px', textAlign: 'center' }}>Gastos fijos mensuales y porcentaje de IVA aplicable.</p>
+          <h2 style={{ textAlign: 'center', marginBottom: '8px', fontSize: '19px', color: '#fff' }}>Configuración General</h2>
+          <p style={{ fontSize: '13px', color: '#aaa', marginBottom: '20px', textAlign: 'center' }}>Gastos fijos mensuales y porcentaje de IVA aplicable.</p>
           
-          <div style={{ marginBottom: '15px' }}>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#4CAF50', fontSize: '14px' }}>Porcentaje de IVA (%)</label>
+          <div style={{ marginBottom: '16px' }}>
+            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#4CAF50', fontSize: '14px' }}>Porcentaje de IVA (%)</label>
             <input type="number" inputMode="decimal" value={config.porcentajeIva} onChange={(e) => setConfig({ ...config, porcentajeIva: parseFloat(e.target.value) || 0 })} style={inputStyle} />
           </div>
 
           <hr style={{ borderColor: '#333', margin: '20px 0' }}/>
 
           {Object.entries(config).filter(([key]) => key !== 'porcentajeIva').map(([key, val]) => (
-            <div key={key} style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', textTransform: 'capitalize', marginBottom: '5px', fontWeight: 'bold', color: '#ddd', fontSize: '14px' }}>{key.replace(/([A-Z])/g, ' $1')}</label>
+            <div key={key} style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', textTransform: 'capitalize', marginBottom: '6px', fontWeight: 'bold', color: '#ddd', fontSize: '14px' }}>{key.replace(/([A-Z])/g, ' $1')}</label>
               <input type="number" inputMode="decimal" value={val} onChange={(e) => setConfig({ ...config, [key]: parseFloat(e.target.value) || 0 })} style={inputStyle} />
             </div>
           ))}
