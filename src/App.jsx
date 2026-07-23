@@ -141,7 +141,7 @@ function App() {
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', background: '#1a1a1a', padding: '14px 20px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
             <button onClick={() => setFecha(new Date(year, month, fecha.getDate()-1))} style={{fontSize: '22px', background:'none', border:'none', color:'white', cursor: 'pointer', padding: '0 5px'}}>&lt;</button>
-            <span style={{ fontWeight: 'bold', fontSize: '16px', color: '#fff', textTransform: 'capitalize' }}>
+            <span style={{ fontWeight: 'bold', fontSize: '15px', color: '#fff', textTransform: 'capitalize' }}>
               {fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' })}
             </span>
             <button onClick={() => setFecha(new Date(year, month, fecha.getDate()+1))} style={{fontSize: '22px', background:'none', border:'none', color:'white', cursor: 'pointer', padding: '0 5px'}}>&gt;</button>
@@ -225,7 +225,7 @@ function App() {
         </div>
       )}
 
-      {/* VISTA CALENDARIO CON NÚMEROS MUY GRANDES */}
+      {/* VISTA CALENDARIO CON NUEVOS COLORES LLAMATIVOS */}
       {vistaActual === 'calendario' && (
         <div style={{ background: '#1a1a1a', padding: '18px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
@@ -244,6 +244,7 @@ function App() {
               const ingDia = (dInfo?.ingresos || []).reduce((acc, x) => acc + x.monto, 0);
               const gasDia = (dInfo?.gastos || []).reduce((acc, x) => acc + x.monto, 0);
               const esHoy = new Date().toDateString() === new Date(year, month, diaReal).toDateString();
+              const tieneMovimientos = ingDia > 0 || gasDia > 0;
 
               return (
                 <button 
@@ -251,8 +252,8 @@ function App() {
                   onClick={() => { setFecha(new Date(year, month, diaReal)); setVistaActual('diario'); }} 
                   style={{ 
                     padding: '8px 2px', 
-                    background: esHoy ? '#1b3b1c' : '#141d14', 
-                    border: esHoy ? '2px solid #4CAF50' : '1px solid #224422', 
+                    background: esHoy ? '#163821' : (tieneMovimientos ? '#1c2821' : '#181818'), 
+                    border: esHoy ? '2px solid #4CAF50' : (tieneMovimientos ? '1px solid #2e7d32' : '1px solid #2a2a2a'), 
                     color: 'white', 
                     borderRadius: '10px', 
                     cursor: 'pointer',
@@ -261,13 +262,13 @@ function App() {
                     flexDirection: 'column',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    boxShadow: esHoy ? '0 0 8px rgba(76, 175, 80, 0.4)' : 'none'
+                    boxShadow: esHoy ? '0 0 10px rgba(76, 175, 80, 0.5)' : 'none'
                   }}>
-                  {/* Número del día más grande y destacado */}
-                  <strong style={{ fontSize: '20px', color: '#ffffff', fontWeight: '900', marginTop: '2px' }}>{diaReal}</strong>
+                  {/* Número grande y destacado */}
+                  <strong style={{ fontSize: '20px', color: esHoy ? '#76ff03' : '#ffffff', fontWeight: '900', marginTop: '2px' }}>{diaReal}</strong>
                   <div style={{ width: '100%', fontSize: '11px', lineHeight: '1.2', marginBottom: '2px' }}>
                     {ingDia > 0 && <div style={{ color: '#4CAF50', fontWeight: 'bold' }}>+{ingDia.toFixed(0)}€</div>}
-                    {gasDia > 0 && <div style={{ color: '#ff4d4d', fontWeight: 'bold' }}>-{gasDia.toFixed(0)}€</div>}
+                    {gasDia > 0 && <div style={{ color: '#ff5252', fontWeight: 'bold' }}>-{gasDia.toFixed(0)}€</div>}
                   </div>
                 </button>
               );
