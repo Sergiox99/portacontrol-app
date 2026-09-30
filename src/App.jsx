@@ -1,294 +1,229 @@
 import { useState, useEffect } from 'react';
 
 function App() {
-  const [vistaActual, setVistaActual] = useState('diario');
-  const [fecha, setFecha] = useState(new Date());
+  const [vistaActual, setVistaActual] = useState('inicio');
 
-  const [config, setConfig] = useState(() => {
-    const guardado = localStorage.getItem('portacontrol_ajustes');
+  // Estado para los datos contables y de gastos de autónomo de Portacontrol
+  const [datosPorta, setDatosPorta] = useState(() => {
+    const guardado = localStorage.getItem('portacontrol_datos_v1');
     return guardado ? JSON.parse(guardado) : {
-      cuotaCamion: 1200,
-      seguro: 350,
-      gestoria: 100,
-      otrosFijos: 200,
-      porcentajeIva: 21
+      gastos: [],
+      ingresos: [],
+      config: { irpfDefault: 15, cuotaAutonomo: 300 }
     };
   });
 
-  const [datosDiarios, setDatosDiarios] = useState(() => {
-    const guardado = localStorage.getItem('portacontrol_datos');
-    return guardado ? JSON.parse(guardado) : {};
-  });
-
-  const [ingresoInput, setIngresoInput] = useState('');
-  const [conceptoIngreso, setConceptoIngreso] = useState('');
-  const [gastoInput, setGastoInput] = useState('');
-  const [conceptoGasto, setConceptoGasto] = useState('');
-  const [llevaIva, setLlevaIva] = useState(true);
+  const [nuevoGastoConcepto, setNuevoGastoConcepto] = useState('');
+  const [nuevoGastoMonto, setNuevoGastoMonto] = useState('');
+  const [nuevoGastoCategoria, setNuevoGastoCategoria] = useState('Combustible');
 
   useEffect(() => {
-    localStorage.setItem('portacontrol_datos', JSON.stringify(datosDiarios));
-  }, [datosDiarios]);
+    localStorage.setItem('portacontrol_datos_v1', JSON.stringify(datosPorta));
+  }, [datosPorta]);
 
-  useEffect(() => {
-    localStorage.setItem('portacontrol_ajustes', JSON.stringify(config));
-  }, [config]);
+  // Función para exportar la copia de seguridad en JSON
+  const exportarDatos = async () => {
+    const copia = { app: 'Portacontrol', version: 1, fechaCopia: new Date().toISOString(), datosPorta };
+    const contenido = JSON.stringify(copia, null, 2);
+    const archivo = new File([contenido], `copia-seguridad-portacontrol-${new Date().toISOString().slice(0, 10)}.json`, { type: 'application/json' });
 
-  const year = fecha.getFullYear();
-  const month = fecha.getMonth();
-  const fechaKey = `${year}-${(month + 1).toString().padStart(2, '0')}-${fecha.getDate().toString().padStart(2, '0')}`;
-
-  const datosDia = datosDiarios[fechaKey] || { ingresos: [], gastos: [], notas: '' };
-
-  const agregarIngreso = () => {
-    const monto = parseFloat(ingresoInput);
-    if (monto > 0) {
-      const aplicableIva = llevaIva;
-      const nuevoIngreso = { 
-        id: Date.now(), 
-        concepto: conceptoIngreso || 'Viaje / Portacoches', 
-        monto, 
-        iva: aplicableIva ? monto * (config.porcentajeIva / 100) : 0 
-      };
-      const nuevosIngresos = [...(datosDia.ingresos || []), nuevoIngreso];
-      setDatosDiarios(prev => ({ ...prev, [fechaKey]: { ...datosDia, ingresos: nuevosIngresos } }));
-      setIngresoInput('');
-      setConceptoIngreso('');
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [archivo] })) {
+      try {
+        await navigator.share({ title: 'Copia de seguridad - Portacontrol', files: [archivo] });
+        return;
+      } catch (error) { if (error?.name === 'AbortError') return; }
     }
+
+    const url = URL.createObjectURL(archivo);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = archivo.name;
+    document.body.appendChild(enlace);
+    enlace.click();
+    enlace.remove();
+    URL.revokeObjectURL(url);
   };
 
-  const eliminarIngreso = (id) => {
-    const nuevosIngresos = datosDia.ingresos.filter(i => i.id !== id);
-    setDatosDiarios(prev => ({ ...prev, [fechaKey]: { ...datosDia, ingresos: nuevosIngresos } }));
+  // Función para importar y restaurar los datos
+  const importarDatos = (event) => {
+    const archivo = event.target.files?.[0];
+    if (!archivo) return;
+    const lector = new FileReader();
+    lector.onload = (e) => {
+      try {
+        const copia = JSON.parse(e.target.result);
+        if (!copia || !copia.datosPorta) throw new Error('Formato no válido');
+        if (!window.confirm('¿Quieres sustituir los datos actuales por esta copia de seguridad?')) return;
+        setDatosPorta(copia.datosPorta);
+        alert('¡Copia de seguridad restaurada correctamente!');
+      } catch (error) {
+        alert('No se ha podido importar el archivo.');
+      } finally {
+        event.target.value = '';
+      }
+    };
+    lector.readAsText(archivo);
   };
 
-  const agregarGasto = () => {
-    const monto = parseFloat(gastoInput);
-    if (monto > 0) {
-      const aplicableIva = llevaIva;
-      const nuevoGasto = { 
-        id: Date.now(), 
-        concepto: conceptoGasto || 'Gasoil / Varios', 
-        monto,
-        iva: aplicableIva ? monto * (config.porcentajeIva / 100) : 0
-      };
-      const nuevosGastos = [...(datosDia.gastos || []), nuevoGasto];
-      setDatosDiarios(prev => ({ ...prev, [fechaKey]: { ...datosDia, gastos: nuevosGastos } }));
-      setGastoInput('');
-      setConceptoGasto('');
+  const agregarGasto = (e) => {
+    e.preventDefault();
+    const monto = parseFloat(nuevoGastoMonto);
+    if (!nuevoGastoConcepto.trim() || isNaN(monto) || monto <= 0) {
+      alert('Introduce un concepto y un importe válido.');
+      return;
     }
+    const nuevo = {
+      id: Date.now(),
+      concepto: nuevoGastoConcepto.trim(),
+      monto: monto,
+      categoria: nuevoGastoCategoria,
+      fecha: new Date().toISOString().slice(0, 10)
+    };
+    setDatosPorta(prev => ({
+      ...prev,
+      gastos: [nuevo, ...(prev.gastos || [])]
+    }));
+    setNuevoGastoConcepto('');
+    setNuevoGastoMonto('');
   };
 
   const eliminarGasto = (id) => {
-    const nuevosGastos = datosDia.gastos.filter(g => g.id !== id);
-    setDatosDiarios(prev => ({ ...prev, [fechaKey]: { ...datosDia, gastos: nuevosGastos } }));
+    if (window.confirm('¿Eliminar este gasto?')) {
+      setDatosPorta(prev => ({
+        ...prev,
+        gastos: prev.gastos.filter(g => g.id !== id)
+      }));
+    }
   };
 
-  const calcularTotalesMes = (m, y) => {
-    let tIngresos = 0;
-    let tIvaRepercutido = 0;
-    let tGastosVariables = 0;
-    let tIvaSoportado = 0;
-    const prefijo = `${y}-${(m + 1).toString().padStart(2, '0')}`;
-
-    Object.keys(datosDiarios).forEach(key => {
-      if (key.startsWith(prefijo)) {
-        const d = datosDiarios[key];
-        (d.ingresos || []).forEach(i => {
-          tIngresos += i.monto;
-          tIvaRepercutido += (i.iva || 0);
-        });
-        (d.gastos || []).forEach(g => {
-          tGastosVariables += g.monto;
-          tIvaSoportado += (g.iva || 0);
-        });
-      }
-    });
-
-    const totalGastosFijos = Object.values(config).filter((_, idx) => idx < 4).reduce((a, b) => a + (parseFloat(b) || 0), 0);
-    const tGastosTotales = tGastosVariables + totalGastosFijos;
-    const beneficioNeto = tIngresos - tGastosTotales;
-    const balanceIva = tIvaRepercutido - tIvaSoportado;
-
-    return { tIngresos, tIvaRepercutido, tGastosVariables, tIvaSoportado, totalGastosFijos, tGastosTotales, beneficioNeto, balanceIva };
-  };
-
-  const mesActualTotales = calcularTotalesMes(month, year);
-
-  const inputStyle = { width: '100%', padding: '12px', borderRadius: '8px', fontSize: '16px', border: '1px solid #333', backgroundColor: '#000', color: '#fff', boxSizing: 'border-box', marginBottom: '10px' };
+  const totalGastos = (datosPorta.gastos || []).reduce((acc, g) => acc + g.monto, 0);
 
   return (
-    <div style={{ padding: '15px', backgroundColor: '#121212', color: 'white', minHeight: '100vh', fontFamily: 'sans-serif', maxWidth: '480px', margin: '0 auto' }}>
-      
-      {/* Cabecera con el logo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '15px', background: '#1a1a1a', padding: '14px 18px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
-        <img src="/logo.png" alt="Logo" style={{ width: '48px', height: '48px', borderRadius: '10px', objectFit: 'cover' }} />
-        <div>
-          <h1 style={{ fontSize: '17px', margin: 0, color: '#4CAF50', fontWeight: 'bold' }}>Portacontrol</h1>
-          <p style={{ fontSize: '12px', margin: 0, color: '#aaa' }}>Gestión de Autónomo</p>
+    <div style={{ minHeight: '100vh', padding: '16px 14px 90px', background: '#07130d', color: '#f4faf6', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+      <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+        
+        {/* ENCABEZADO */}
+        <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <div>
+            <div style={{ color: '#9db1a4', fontSize: '10px', fontWeight: '800', letterSpacing: '.1em', textTransform: 'uppercase' }}>Control Autónomo Portacoches</div>
+            <div style={{ fontSize: '26px', fontWeight: '850', marginTop: '2px', color: '#34c759' }}>🚛 Portacontrol</div>
+          </div>
+          <button 
+            onClick={() => setVistaActual(vistaActual === 'ajustes' ? 'inicio' : 'ajustes')} 
+            style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#0e1d15', border: '1px solid #294336', color: '#f4faf6', fontSize: '18px', cursor: 'pointer' }}
+          >
+            {vistaActual === 'ajustes' ? '🏠' : '⚙️'}
+          </button>
+        </header>
+
+        {/* NAVEGACIÓN RÁPIDA */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginBottom: '20px' }}>
+          <button 
+            onClick={() => setVistaActual('inicio')}
+            style={{ padding: '12px', borderRadius: '12px', background: vistaActual === 'inicio' ? '#34c759' : '#0e1d15', color: vistaActual === 'inicio' ? '#000' : '#f4faf6', border: '1px solid #294336', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            📊 Gastos y Resumen
+          </button>
+          <button 
+            onClick={() => setVistaActual('ajustes')}
+            style={{ padding: '12px', borderRadius: '12px', background: vistaActual === 'ajustes' ? '#34c759' : '#0e1d15', color: vistaActual === 'ajustes' ? '#000' : '#f4faf6', border: '1px solid #294336', fontWeight: 'bold', cursor: 'pointer' }}
+          >
+            ⚙️ Ajustes y Copias
+          </button>
         </div>
-      </div>
 
-      {/* Menú de pestañas */}
-      <div style={{ display: 'flex', gap: '4px', marginBottom: '18px' }}>
-        {['diario', 'mensual', 'anual', 'calendario', 'ajustes'].map(v => (
-          <button key={v} onClick={() => setVistaActual(v)} style={{ flex: 1, padding: '11px 2px', borderRadius: '8px', border: 'none', background: vistaActual === v ? '#4CAF50' : '#1e1e1e', color: vistaActual === v ? '#000' : 'white', fontWeight: 'bold', textTransform: 'uppercase', fontSize: '10px', cursor: 'pointer' }}>{v}</button>
-        ))}
-      </div>
-
-      {/* VISTA DIARIO */}
-      {vistaActual === 'diario' && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', background: '#1a1a1a', padding: '14px 20px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
-            <button onClick={() => setFecha(new Date(year, month, fecha.getDate()-1))} style={{fontSize: '22px', background:'none', border:'none', color:'white', cursor: 'pointer', padding: '0 5px'}}>&lt;</button>
-            <span style={{ fontWeight: 'bold', fontSize: '15px', color: '#fff', textTransform: 'capitalize' }}>
-              {fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'numeric', year: 'numeric' })}
-            </span>
-            <button onClick={() => setFecha(new Date(year, month, fecha.getDate()+1))} style={{fontSize: '22px', background:'none', border:'none', color:'white', cursor: 'pointer', padding: '0 5px'}}>&gt;</button>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#1a1a1a', padding: '12px 16px', borderRadius: '10px', marginBottom: '15px', border: '1px solid #2a2a2a', fontSize: '14px' }}>
-            <span>Aplicar IVA ({config.porcentajeIva}%):</span>
-            <input type="checkbox" checked={llevaIva} onChange={(e) => setLlevaIva(e.target.checked)} style={{ width: '22px', height: '22px', accentColor: '#4CAF50', cursor: 'pointer' }} />
-          </div>
-
-          <div style={{ background: '#1a1a1a', padding: '16px', borderRadius: '12px', marginBottom: '15px', border: '1px solid #2e7d32' }}>
-            <h3 style={{ margin: '0 0 12px 0', color: '#4CAF50', fontSize: '16px' }}>Ingresos del Día</h3>
-            <input type="text" placeholder="Concepto (ej: Portes Madrid)" value={conceptoIngreso} onChange={(e) => setConceptoIngreso(e.target.value)} style={inputStyle} />
-            <input type="number" inputMode="decimal" placeholder="Importe (€)" value={ingresoInput} onChange={(e) => setIngresoInput(e.target.value)} style={inputStyle} />
-            <button onClick={agregarIngreso} style={{ width: '100%', padding: '13px', background: '#4CAF50', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>Añadir Ingreso</button>
-            
-            {datosDia.ingresos?.map(i => (
-              <div key={i.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', background: '#111', padding: '11px', borderRadius: '6px' }}>
-                <span style={{ fontSize: '14px' }}>{i.concepto}: <strong>{i.monto.toFixed(2)}€</strong> {i.iva > 0 && <span style={{color: '#aaa', fontSize: '12px'}}>(IVA: {i.iva.toFixed(2)}€)</span>}</span>
-                <button onClick={() => eliminarIngreso(i.id)} style={{ background: '#ff4d4d', border: 'none', color: 'white', borderRadius: '4px', padding: '5px 10px', cursor: 'pointer', fontWeight: 'bold' }}>X</button>
-              </div>
-            ))}
-          </div>
-
-          <div style={{ background: '#1a1a1a', padding: '16px', borderRadius: '12px', border: '1px solid #c62828' }}>
-            <h3 style={{ margin: '0 0 12px 0', color: '#ff4d4d', fontSize: '16px' }}>Gastos Variables (Gasoil, Peajes...)</h3>
-            <input type="text" placeholder="Concepto (ej: Gasoil Repsol)" value={conceptoGasto} onChange={(e) => setConceptoGasto(e.target.value)} style={inputStyle} />
-            <input type="number" inputMode="decimal" placeholder="Importe (€)" value={gastoInput} onChange={(e) => setGastoInput(e.target.value)} style={inputStyle} />
-            <button onClick={agregarGasto} style={{ width: '100%', padding: '13px', background: '#ff4d4d', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>Añadir Gasto</button>
-            
-            {datosDia.gastos?.map(g => (
-              <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', background: '#111', padding: '11px', borderRadius: '6px' }}>
-                <span style={{ fontSize: '14px' }}>{g.concepto}: <strong>{g.monto.toFixed(2)}€</strong> {g.iva > 0 && <span style={{color: '#aaa', fontSize: '12px'}}>(IVA: {g.iva.toFixed(2)}€)</span>}</span>
-                <button onClick={() => eliminarGasto(g.id)} style={{ background: '#ff4d4d', border: 'none', color: 'white', borderRadius: '4px', padding: '5px 10px', cursor: 'pointer', fontWeight: 'bold' }}>X</button>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* VISTA RESUMEN MENSUAL */}
-      {vistaActual === 'mensual' && (
-        <div style={{ background: '#1a1a1a', padding: '22px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '20px', textTransform: 'capitalize', fontSize: '19px', color: '#fff' }}>Resumen de {fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</h2>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '15px' }}><span>Total Facturado (Base):</span><strong style={{color: '#4CAF50'}}>{mesActualTotales.tIngresos.toFixed(2)}€</strong></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '14px', color: '#aaa' }}><span>IVA Repercutido (Cobrado):</span><span>+{mesActualTotales.tIvaRepercutido.toFixed(2)}€</span></div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '15px' }}><span>Gastos Variables:</span><span style={{color: '#ff4d4d'}}>{mesActualTotales.tGastosVariables.toFixed(2)}€</span></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', fontSize: '15px' }}><span>Gastos Fijos:</span><span style={{color: '#ff4d4d'}}>{mesActualTotales.totalGastosFijos.toFixed(2)}€</span></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '18px', fontSize: '14px', color: '#aaa' }}><span>IVA Soportado (Pagado):</span><span>-{mesActualTotales.tIvaSoportado.toFixed(2)}€</span></div>
-
-          <hr style={{ borderColor: '#333', margin: '18px 0' }}/>
-          
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', fontSize: '16px' }}>
-            <span>Balance IVA (A ingresar):</span>
-            <strong style={{color: '#2196F3'}}>{mesActualTotales.balanceIva.toFixed(2)}€</strong>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', fontWeight: 'bold', background: '#111', padding: '16px', borderRadius: '10px', border: '1px solid #333' }}>
-            <span>Beneficio Neto:</span><span style={{ color: mesActualTotales.beneficioNeto >= 0 ? '#4CAF50' : '#ff4d4d' }}>{mesActualTotales.beneficioNeto.toFixed(2)}€</span>
-          </div>
-        </div>
-      )}
-
-      {/* VISTA RESUMEN ANUAL */}
-      {vistaActual === 'anual' && (
-        <div style={{ background: '#1a1a1a', padding: '18px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '18px', fontSize: '19px', color: '#fff' }}>Resumen Anual ({year})</h2>
-          {['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'].map((nombreMes, index) => {
-            const t = calcularTotalesMes(index, year);
-            return (
-              <div key={nombreMes} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 6px', borderBottom: '1px solid #2a2a2a', fontSize: '14px' }}>
-                <span style={{ width: '90px', fontWeight: 'bold', color: '#ddd' }}>{nombreMes}:</span>
-                <span style={{ color: '#4CAF50' }}>Ing: {t.tIngresos.toFixed(0)}€</span>
-                <span style={{ color: '#ff4d4d' }}>Gas: {t.tGastosTotales.toFixed(0)}€</span>
-                <span style={{ fontWeight: 'bold', color: t.beneficioNeto >= 0 ? '#4CAF50' : '#ff4d4d', minWidth: '65px', textAlign: 'right' }}>{t.beneficioNeto.toFixed(0)}€</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* VISTA CALENDARIO CON TARJETAS VERTICALES Y TÍTULO EN BLANCO */}
-      {vistaActual === 'calendario' && (
-        <div style={{ background: '#1a1a1a', padding: '18px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
-            <button onClick={() => setFecha(new Date(year, month - 1, 1))} style={{ fontSize: '14px', background: '#222', border: '1px solid #333', color: '#fff', borderRadius: '8px', padding: '9px 14px', cursor: 'pointer', fontWeight: 'bold' }}>&lt; Mes</button>
-            <h2 style={{ margin: 0, textTransform: 'capitalize', fontSize: '17px', color: '#ffffff', fontWeight: 'bold', letterSpacing: '0.5px' }}>{fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}</h2>
-            <button onClick={() => setFecha(new Date(year, month + 1, 1))} style={{ fontSize: '14px', background: '#222', border: '1px solid #333', color: '#fff', borderRadius: '8px', padding: '9px 14px', cursor: 'pointer', fontWeight: 'bold' }}>Mes &gt;</button>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
-            {['Lu','Ma','Mi','Ju','Vi','Sa','Do'].map(d => <div key={d} style={{ textAlign: 'center', color: '#4CAF50', fontSize: '13px', fontWeight: 'bold', paddingBottom: '8px' }}>{d}</div>)}
-            {[...Array((new Date(year, month, 1).getDay() + 6) % 7)].map((_, i) => <div key={`empty-${i}`}></div>)}
-            {[...Array(new Date(year, month + 1, 0).getDate())].map((_, i) => {
-              const diaReal = i + 1;
-              const esHoy = new Date().toDateString() === new Date(year, month, diaReal).toDateString();
-
-              return (
-                <button 
-                  key={diaReal} 
-                  onClick={() => { setFecha(new Date(year, month, diaReal)); setVistaActual('diario'); }} 
-                  style={{ 
-                    padding: '24px 2px', 
-                    backgroundColor: esHoy ? '#10341c' : '#141c16', 
-                    border: esHoy ? '2px solid #4CAF50' : '1px solid #1e3d25', 
-                    borderRadius: '10px', 
-                    color: 'white', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    minHeight: '75px',
-                    boxShadow: esHoy ? '0 0 12px rgba(76, 175, 80, 0.6)' : 'none'
-                  }}>
-                  <span style={{ fontWeight: '900', fontSize: esHoy ? '20px' : '17px', color: esHoy ? '#76ff03' : '#ffffff' }}>{diaReal}</span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* VISTA AJUSTES */}
-      {vistaActual === 'ajustes' && (
-        <div style={{ background: '#1a1a1a', padding: '20px', borderRadius: '12px', border: '1px solid #2a2a2a' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '8px', fontSize: '19px', color: '#fff' }}>Configuración General</h2>
-          <p style={{ fontSize: '13px', color: '#aaa', marginBottom: '20px', textAlign: 'center' }}>Gastos fijos mensuales y porcentaje de IVA aplicable.</p>
-          
-          <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', marginBottom: '6px', fontWeight: 'bold', color: '#4CAF50', fontSize: '14px' }}>Porcentaje de IVA (%)</label>
-            <input type="number" inputMode="decimal" value={config.porcentajeIva} onChange={(e) => setConfig({ ...config, porcentajeIva: parseFloat(e.target.value) || 0 })} style={inputStyle} />
-          </div>
-
-          <hr style={{ borderColor: '#333', margin: '20px 0' }}/>
-
-          {Object.entries(config).filter(([key]) => key !== 'porcentajeIva').map(([key, val]) => (
-            <div key={key} style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', textTransform: 'capitalize', marginBottom: '6px', fontWeight: 'bold', color: '#ddd', fontSize: '14px' }}>{key.replace(/([A-Z])/g, ' $1')}</label>
-              <input type="number" inputMode="decimal" value={val} onChange={(e) => setConfig({ ...config, [key]: parseFloat(e.target.value) || 0 })} style={inputStyle} />
+        {/* CONTENIDO SEGÚN VISTA */}
+        {vistaActual === 'inicio' ? (
+          <div>
+            {/* TARJETA RESUMEN */}
+            <div style={{ background: '#0e1d15', border: '1px solid #294336', borderRadius: '16px', padding: '20px', marginBottom: '20px', boxShadow: '0 10px 25px rgba(0,0,0,0.4)' }}>
+              <h3 style={{ margin: '0 0 10px 0', fontSize: '16px', color: '#9db1a4' }}>Total Gastos Registrados</h3>
+              <div style={{ fontSize: '32px', fontWeight: '900', color: '#ff6258' }}>{totalGastos.toFixed(2)}€</div>
             </div>
-          ))}
-        </div>
-      )}
 
+            {/* FORMULARIO NUEVO GASTO */}
+            <div style={{ background: '#0e1d15', border: '1px solid #294336', borderRadius: '16px', padding: '20px', marginBottom: '20px' }}>
+              <h3 style={{ margin: '0 0 14px 0', fontSize: '16px' }}>➕ Añadir Gasto de Autónomo</h3>
+              <form onSubmit={agregarGasto} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <input 
+                  type="text" 
+                  value={nuevoGastoConcepto} 
+                  onChange={(e) => setNuevoGastoConcepto(e.target.value)} 
+                  placeholder="Concepto (ej: Gasoil, Repuesto camión...)" 
+                  style={{ padding: '12px', borderRadius: '10px', background: '#14271c', border: '1px solid #294336', color: '#f4faf6', fontSize: '14px', boxSizing: 'border-box', width: '100%' }}
+                />
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input 
+                    type="number" 
+                    inputMode="decimal" 
+                    step="any" 
+                    value={nuevoGastoMonto} 
+                    onChange={(e) => setNuevoGastoMonto(e.target.value)} 
+                    placeholder="Importe (€)" 
+                    style={{ flex: 1, padding: '12px', borderRadius: '10px', background: '#14271c', border: '1px solid #294336', color: '#f4faf6', fontSize: '14px' }}
+                  />
+                  <select 
+                    value={nuevoGastoCategoria} 
+                    onChange={(e) => setNuevoGastoCategoria(e.target.value)}
+                    style={{ flex: 1, padding: '12px', borderRadius: '10px', background: '#14271c', border: '1px solid #294336', color: '#f4faf6', fontSize: '14px' }}
+                  >
+                    <option value="Combustible">Combustible</option>
+                    <option value="Mantenimiento">Mantenimiento</option>
+                    <option value="Impuestos">Impuestos / Cuota</option>
+                    <option value="Varios">Varios</option>
+                  </select>
+                </div>
+                <button type="submit" style={{ padding: '12px', borderRadius: '10px', background: '#34c759', color: '#000', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', marginTop: '4px' }}>Guardar Gasto</button>
+              </form>
+            </div>
+
+            {/* LISTADO DE GASTOS */}
+            <div style={{ background: '#0e1d15', border: '1px solid #294336', borderRadius: '16px', padding: '20px' }}>
+              <h3 style={{ margin: '0 0 14px 0', fontSize: '16px' }}>📋 Historial de Gastos</h3>
+              {(!datosPorta.gastos || datosPorta.gastos.length === 0) ? (
+                <div style={{ color: '#9db1a4', fontSize: '14px', fontStyle: 'italic' }}>No hay gastos registrados todavía.</div>
+              ) : (
+                datosPorta.gastos.map(g => (
+                  <div key={g.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: '#14271c', borderRadius: '10px', border: '1px solid #294336', marginBottom: '8px' }}>
+                    <div>
+                      <div style={{ fontSize: '10px', color: '#34c759', fontWeight: 'bold', textTransform: 'uppercase' }}>{g.categoria} • {g.fecha}</div>
+                      <div style={{ fontSize: '15px', fontWeight: 'bold', marginTop: '2px' }}>{g.concepto}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <span style={{ fontSize: '15px', fontWeight: 'bold', color: '#ff6258' }}>-{g.monto.toFixed(2)}€</span>
+                      <button onClick={() => eliminarGasto(g.id)} style={{ background: '#ff625822', color: '#ff6258', border: 'none', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', fontWeight: 'bold' }}>🗑️</button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        ) : (
+          /* VISTA AJUSTES Y COPIAS DE SEGURIDAD */
+          <div style={{ background: '#0e1d15', border: '1px solid #294336', borderRadius: '16px', padding: '20px' }}>
+            <h2 style={{ textAlign: 'center', margin: '0 0 20px 0', fontSize: '18px' }}>⚙️ Ajustes y Copias de Seguridad</h2>
+            
+            <p style={{ fontSize: '13px', color: '#9db1a4', lineHeight: '1.5', marginBottom: '20px' }}>
+              Utiliza estas opciones para exportar tus datos en un archivo JSON o restaurarlos si cambias de dispositivo o actualizas el teléfono.
+            </p>
+
+            <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
+              <button 
+                onClick={exportarDatos} 
+                style={{ padding: '14px', borderRadius: '12px', background: '#34c759', color: '#000', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer' }}
+              >
+                📤 Exportar Copia de Seguridad
+              </button>
+
+              <label style={{ padding: '14px', borderRadius: '12px', background: '#14271c', border: '1px solid #294336', color: '#f4faf6', fontWeight: 'bold', textAlign: 'center', cursor: 'pointer', fontSize: '15px' }}>
+                📥 Restaurar / Importar Copia
+                <input type="file" accept=".json,application/json" onChange={importarDatos} style={{ display: 'none' }} />
+              </label>
+            </div>
+          </div>
+        )}
+
+      </div>
     </div>
   );
 }
